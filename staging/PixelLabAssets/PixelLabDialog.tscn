@@ -1,0 +1,110 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/Extensions/PixelLabAssets/PixelLabDialog.gd" id="1_pixellab"]
+
+[node name="PixelLabDialog" type="AcceptDialog"]
+title = "PixelLab"
+size = Vector2i(560, 440)
+min_size = Vector2i(500, 380)
+script = ExtResource("1_pixellab")
+
+[node name="Main" type="VBoxContainer" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="KeyRow" type="HBoxContainer" parent="Main"]
+layout_mode = 2
+
+[node name="SecretKey" type="LineEdit" parent="Main/KeyRow"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+placeholder_text = "pixellab.ai secret key"
+
+[node name="SaveKey" type="Button" parent="Main/KeyRow"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Save key"
+
+[node name="ListRow" type="HBoxContainer" parent="Main"]
+layout_mode = 2
+
+[node name="Category" type="OptionButton" parent="Main/ListRow"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Refresh" type="Button" parent="Main/ListRow"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Refresh"
+
+[node name="Assets" type="ItemList" parent="Main"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="Status" type="Label" parent="Main"]
+unique_name_in_owner = true
+layout_mode = 2
+autowrap_mode = 2
+text = ""
+
+[node name="ActionRow" type="HBoxContainer" parent="Main"]
+layout_mode = 2
+
+[node name="PullAseprite" type="Button" parent="Main/ActionRow"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Pull as Aseprite (tagged)"
+
+[node name="PullSheet" type="Button" parent="Main/ActionRow"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Pull as sheet layer"
+
+[node name="SaveRow" type="HBoxContainer" parent="Main"]
+layout_mode = 2
+
+[node name="SaveTag" type="OptionButton" parent="Main/SaveRow"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="SaveBack" type="Button" parent="Main/SaveRow"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Save edits back"
+
+[node name="SaveAll" type="Button" parent="Main/SaveRow"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Save all back"
+
+[node name="SyncRow" type="HBoxContainer" parent="Main"]
+layout_mode = 2
+
+[node name="UndoSave" type="Button" parent="Main/SyncRow"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Undo last save"
+
+[node name="PublishGif" type="Button" parent="Main/SyncRow"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Publish tag as GIF (gallery)"
+
+[node name="UploadFrame" type="Button" parent="Main/SyncRow"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Upload frame (max 256px)"

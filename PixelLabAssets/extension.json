@@ -1,0 +1,14 @@
+{
+  "name": "PixelLabAssets",
+  "display_name": "PixelLab Assets",
+  "description": "Browse your pixellab.ai library inside Pixelorama, pull assets as tagged Aseprite projects or sheet layers, and save your edits back to the cloud asset they came from. Requires a free pixellab.ai secret key (pixellab.ai/account).",
+  "author": "Naz (Na-ark Rojanasuvan)",
+  "version": "1.0.0",
+  "license": "MIT",
+  "nodes": [
+    "pixellab_init.tscn"
+  ],
+  "supported_api_versions": [
+    10
+  ]
+}
