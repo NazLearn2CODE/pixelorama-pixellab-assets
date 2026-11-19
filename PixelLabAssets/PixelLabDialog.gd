@@ -17,6 +17,7 @@ var _busy := false
 var _list_generation := 0
 var _thumbnails_pending := 0
 var _selected_tag := ""
+var _state_name_cache := {}  # asset id -> state name (session lifetime)
 
 @onready var secret_key_edit: LineEdit = %SecretKey
 @onready var save_key_button: Button = %SaveKey
@@ -192,9 +193,16 @@ func _refresh() -> void:
 			})
 	_set_status("Loaded %d of %d %s." % [res.items.size(), res.total, category])
 	# Thumbnails: fire-and-forget, generation-guarded against stale fills.
+	# The same walk collects the rows whose summary carried NO state_name —
+	# some servers omit it from list summaries (the OpenAPI schema allows
+	# absent/null; the spec example documents state_name only on the detail).
+	# States of one character always share a group, so grouped summary rows
+	# without a state get a detail fetch (which does document state_name) and
+	# are relabelled; results are cached per asset id for the session.
 	_list_generation += 1
 	var gen := _list_generation
 	var flat_idx := 0
+	var pending: Array = []  # [[row_index, item], ...]
 	for row in rows:
 		flat_idx += 1  # skip header row
 		for item in row["items"]:
@@ -202,7 +210,54 @@ func _refresh() -> void:
 			if not preview.is_empty():
 				_thumbnails_pending += 1
 				_fetch_thumbnail(gen, flat_idx, preview)
+			var asset_id := str(item.get("id", ""))
+			var summary_state: Variant = item.get("state_name")
+			if summary_state != null and not str(summary_state).is_empty():
+				_state_name_cache[asset_id] = str(summary_state)
+			elif _state_name_cache.has(asset_id):
+				item["state_name"] = _state_name_cache[asset_id]
+				_relabel_row(flat_idx, item)
+			elif str(item.get("group_id", "")) != "":
+				pending.append([flat_idx, item])
 			flat_idx += 1
+	# Awaited completion pass: label states the summary omitted.
+	if not pending.is_empty():
+		_set_status("Fetching state names (%d)..." % pending.size())
+		for pair in pending:
+			if gen != _list_generation:
+				return  # a newer refresh owns the list now
+			var idx: int = pair[0]
+			var item: Dictionary = pair[1]
+			var d: Dictionary
+			if category == "characters":
+				d = await api.get_character_detail(self, str(item.get("id", "")))
+			else:
+				d = await api.get_object_detail(self, str(item.get("id", "")))
+			if not (d.ok and d.json is Dictionary):
+				continue
+			var detail_state: Variant = d.json.get("state_name")
+			if detail_state != null and not str(detail_state).is_empty():
+				item["state_name"] = str(detail_state)
+				_state_name_cache[str(item.get("id", ""))] = str(detail_state)
+				_relabel_row(idx, item)
+		if gen == _list_generation:
+			_set_status("Loaded %d of %d %s." % [res.items.size(), res.total, category])
+
+
+## Re-renders one asset row's text from its (possibly updated) fields. The
+## label rules are the same as in _refresh: state name when present, else the
+## asset name, plus the [size, N dir] suffix.
+func _relabel_row(idx: int, item: Dictionary) -> void:
+	if idx >= asset_list.item_count:
+		return
+	var raw_state: Variant = item.get("state_name")
+	var state_label := "" if raw_state == null else str(raw_state)
+	var name_label: String = str(item.get("name", "(unnamed)"))
+	var label: String = state_label if not state_label.is_empty() else name_label
+	var size_info: Dictionary = item.get("size", {})
+	var dims := "%dx%d" % [int(size_info.get("width", 0)), int(size_info.get("height", 0))] if size_info else ""
+	var suffix := "  [%s, %d dir]" % [dims, item.get("directions", 1)] if not dims.is_empty() else ""
+	asset_list.set_item_text(idx, label + suffix)
 
 
 func _fetch_thumbnail(gen: int, idx: int, url: String) -> void:
