@@ -168,13 +168,25 @@ func _refresh() -> void:
 		var header_idx := asset_list.add_item("— %s —" % row["header"])
 		asset_list.set_item_disabled(header_idx, true)
 		for item in row["items"]:
-			var label: String = str(item.get("name", "(unnamed)"))
+			# Row label = the STATE name, not the asset name. Every state of
+			# one character shares the character's name, so labelling rows
+			# with it made them indistinguishable ("The Producer" x N). The
+			# list summary carries state_name ("Name of this state within the
+			# character" — OpenAPI CharacterSummary/ObjectSummary, string or
+			# null); the group header above already shows the character name.
+			# Fall back to the name when a state is null/missing (str(null)
+			# renders "<null>" — guard before converting).
+			var raw_state: Variant = item.get("state_name")
+			var state_label := "" if raw_state == null else str(raw_state)
+			var name_label: String = str(item.get("name", "(unnamed)"))
+			var label: String = state_label if not state_label.is_empty() else name_label
 			var size_info: Dictionary = item.get("size", {})
 			var dims := "%dx%d" % [int(size_info.get("width", 0)), int(size_info.get("height", 0))] if size_info else ""
 			var suffix := "  [%s, %d dir]" % [dims, item.get("directions", 1)] if not dims.is_empty() else ""
 			var idx := asset_list.add_item(label + suffix)
 			asset_list.set_item_metadata(idx, {
-				"id": str(item.get("id", "")), "name": label,
+				"id": str(item.get("id", "")), "name": name_label,
+				"state_name": state_label,
 				"group_id": str(item.get("group_id", "")),
 				"preview_url": str(item.get("preview_url", "")),
 			})
